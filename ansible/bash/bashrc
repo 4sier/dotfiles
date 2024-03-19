@@ -1,0 +1,118 @@
+# source bash prompt
+source ~/.bash/bash_prompt
+
+# Source bash aliases
+source ~/.bash/bash_aliases
+
+# Source bash functions
+source ~/.bash/bash_functions
+
+# Env
+export TERM=xterm-256color
+export EDITOR=vim
+
+# Show system information at login
+if [ -t 0 ]; then
+    if type -p "neofetch" > /dev/null; then
+        neofetch
+    else
+        echo "Warning: neofetch was called, but it's not installed."
+    fi
+fi
+
+# Don't add duplicate lines or lines beginning with a space to the history
+HISTCONTROL=ignoreboth
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# Set history format to include timestamps
+HISTTIMEFORMAT="%Y-%m-%d %T "
+
+# Correct simple errors while using cd
+shopt -s cdspell
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ] ; then
+  # Add /home/$USER/bin to $PATH
+  case :$PATH: in
+      *:/home/$USER/bin:*) ;;
+      *) PATH=/home/$USER/bin:$PATH ;;
+  esac
+fi
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/bin" ] ; then
+    # Add /home/$USER/.local/bin to $PATH
+    case :$PATH: in
+        *:/home/$USER/.local/bin:*) ;;
+        *) PATH=/home/$USER/.local/bin:$PATH ;;
+    esac
+fi
+
+# Enable tab completion for tmux
+source /home/$USER/.tmux/plugins/completion/tmux
+
+# Add /home/$USER/.tmux/tmuxifier to $PATH
+case :$PATH: in
+	*:/home/$USER/.tmux/tmuxifier/bin:*) ;;
+	*) PATH=/home/$USER/.tmux/tmuxifier/bin:$PATH ;;
+esac
+
+if [ -d /home/$USER/.paths.d ]; then
+  for i in /home/$USER/.paths.d/*.sh; do
+    if [ -r $i ]; then
+      . $i
+    fi
+  done
+  unset i
+fi
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# Safetynets
+# do not delete / or prompt if deleting more than 3 files at a time #
+alias rm='rm -I --preserve-root'
+
+# confirmation #
+alias mv='mv -i'
+alias cp='cp -i'
+alias ln='ln -i'
+
+# Parenting changing perms on / #
+alias chown='chown --preserve-root'
+alias chmod='chmod --preserve-root'
+alias chgrp='chgrp --preserve-root'
+
+# Source fzf key-bindings
+if [ -f ~/.config/fzf/key-bindings.bash ]; then
+  . ~/.config/fzf/key-bindings.bash
+fi
+
+# Enable starship
+if [ -x /usr/local/bin/starship ]; then
+  eval "$(starship init bash)"
+fi
+
+# reload bash config
+alias reload="source ~/.bashrc"

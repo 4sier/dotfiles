@@ -1,0 +1,12 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =0
+let g:netrw_dirhist_0='/home/asier'
+let g:netrw_dirhist_9='/home/asier/dev/ansible_config/roles/base/files/users/asier/bash'
+let g:netrw_dirhist_8='/home/asier/dev/ansible_config/roles/base/files/users/asier'
+let g:netrw_dirhist_7='/home/asier/dev/ansible_config/roles/base/files/users'
+let g:netrw_dirhist_6='/home/asier/dev/ansible_config/roles/base/files'
+let g:netrw_dirhist_5='/home/asier/dev/ansible_config/roles/base'
+let g:netrw_dirhist_4='/home/asier/dev/ansible_config/roles/base/tasks'
+let g:netrw_dirhist_3='/home/asier/dev/ansible_config/roles/base/tasks/users'
+let g:netrw_dirhist_2='/home/asier/dev/ansible_config/roles/base/tasks'
+let g:netrw_dirhist_1='/home/asier/dev/ansible_config/roles/base'

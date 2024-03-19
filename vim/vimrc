@@ -1,0 +1,575 @@
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"
+"               ██╗   ██╗██╗███╗   ███╗██████╗  ██████╗
+"               ██║   ██║██║████╗ ████║██╔══██╗██╔════╝
+"               ██║   ██║██║██╔████╔██║██████╔╝██║
+"               ╚██╗ ██╔╝██║██║╚██╔╝██║██╔══██╗██║
+"                ╚████╔╝ ██║██║ ╚═╝ ██║██║  ██║╚██████╗
+"                 ╚═══╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝
+"
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+
+
+" Enable Plugin Manager pathogen
+execute pathogen#infect()
+
+" This will enable code folding.
+" Use the marker method of folding.
+"augroup filetype_vim
+"    autocmd!
+"    autocmd FileType vim setlocal foldmethod=marker
+"augroup END
+
+" Disable annoying beep sound
+set vb
+
+" Set color scheme. Other good ones are bubblegum-256-dark, sorcerer, and zenburn
+"colorscheme bubblegum-256-dark
+"colorscheme darktango
+"colorscheme jellybeans
+colorscheme xoria256
+"colorscheme zenburn
+
+" Disable compatibility with vi which can cause unexpected issues.
+set nocompatible
+
+" Enable type file detection. Vim will be able to try to detect the type of file in use.
+filetype on
+
+" Enable plugins and load plugin for the detected file type.
+filetype plugin on
+
+" Load an indent file for the detected file type.
+filetype indent on
+
+" Enable syntax highlighting
+syntax on
+
+" Show line numbers
+set number
+set relativenumber
+
+" Toogle relativenumber when entering/leaving INSERT mode
+autocmd InsertEnter * :setlocal norelativenumber
+autocmd InsertLeave * :setlocal relativenumber
+
+" Highlight cursor line underneath the cursor horizontally.
+set cursorline
+
+" TODO:  What is this for?
+""hi cursorline gui=none
+augroup CursorlineOnlyInActiveWindow
+    autocmd!
+    autocmd VimEnter,WinEnter,BufWinEnter * setlocal cursorline
+    autocmd WinLeave * setlocal nocursorline
+augroup END
+
+" Set shift and tab width to 4 spaces and use space characters instead of tabs.
+set shiftwidth=4
+set tabstop=4
+set expandtab
+
+" Do not save backup files.
+set nobackup
+set nowb
+set noswapfile
+
+" Do not let cursor scroll below or above N number of lines when scrolling.
+set scrolloff=10
+
+" Do not wrap lines. Allow long lines to extend as far as the line goes.
+set nowrap
+
+" While searching though a file incrementally highlight matching characters as you type.
+set incsearch
+
+" Ignore capital letters during search.
+set ignorecase
+
+" Override the ignorecase option if searching for capital letters.
+" This will allow you to search specifically for capital letters.
+set smartcase
+
+" Show partial command you type in the last line of the screen.
+set showcmd
+
+" Show the mode you are on the last line.
+set showmode
+
+" Show matching words during a search.
+set showmatch
+
+" Use highlighting when doing a search.
+set hlsearch
+
+" Set the commands to save in history default number is 20.
+set history=1000
+
+" Enable auto completion menu after pressing TAB.
+set wildmenu
+
+" Make wildmenu behave like similar to Bash completion.
+set wildmode=list:longest
+
+" There are certain files that we would never want to edit with Vim.
+" Wildmenu will ignore files with these extensions.
+set wildignore=*.docx,*.jpg,*.png,*.gif,*.pdf,*.pyc,*.exe,*.flv,*.img,*.xlsx
+
+" this turns off physical line wrapping (ie: automatic insertion of newlines)
+set textwidth=0 wrapmargin=0
+
+" Be smart when using tabs
+set smarttab
+
+" Set utf8 as standard encoding and en_US as the standard language
+set encoding=utf8
+
+" Use Unix as the standard file type
+set ffs=unix,dos,mac
+
+
+
+" PLUGINS ---------------------------------------------------------------- {{{
+
+" Use this when using vim-lsp
+if executable('verible-verilog-ls')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'verible-verilog-ls',
+        \ 'cmd': {server_info->['verible-verilog-ls']},
+        \ 'allowlist': ['verilog', 'systemverilog'],
+        \ })
+
+endif
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    setlocal signcolumn=yes
+    if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+    nmap <buffer> gd <plug>(lsp-definition)
+    nmap <buffer> gs <plug>(lsp-document-symbol-search)
+    nmap <buffer> gS <plug>(lsp-workspace-symbol-search)
+    nmap <buffer> gr <plug>(lsp-references)
+    nmap <buffer> gi <plug>(lsp-implementation)
+    nmap <buffer> gt <plug>(lsp-type-definition)
+    nmap <buffer> <leader>rn <plug>(lsp-rename)
+    nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+    nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+    nmap <buffer> K <plug>(lsp-hover)
+    nnoremap <buffer> <expr><c-f> lsp#scroll(+4)
+    nnoremap <buffer> <expr><c-d> lsp#scroll(-4)
+
+    let g:lsp_format_sync_timeout = 1000
+    autocmd! BufWritePre *.rs,*.go call execute('LspDocumentFormatSync')
+
+    " refer to doc to add more commands
+endfunction
+
+augroup lsp_install
+    au!
+    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
+
+
+" Use this when using ale
+"let g:ale_linters = {
+"\   'verilog': ['verible']
+"\}
+"
+"if !exists('g:ale_verilog_verible_options')
+"    let g:ale_verilog_verible_options = ''
+"endif
+"
+"function! ale_linters#verilog#verible#GetCommand(buffer) abort
+"    let l:filename = tempname() . '_verible_linted.sv'
+"
+"    " Create a special filename, so we can detect it in the handler.
+"    call ale#command#ManageFile(a:buffer, l:filename)
+"    let l:lines = getbufline(a:buffer, 1, '$')
+"    call ale#util#Writefile(a:buffer, l:lines, l:filename)
+"
+"    return 'verible-verilog-lint '
+"    \   . ale#Var(a:buffer, 'verilog_verible_options') .' '
+"    \   . ale#Escape(l:filename)
+"endfunction
+"
+"function! ale_linters#verilog#verible#Handle(buffer, lines) abort
+"    " Look for lines like the following.
+"    " Patterns:
+"    "   Style warnings
+"    "       filename.sv:7:13: Explicitly define static or automatic lifetime for non-class functions [Style: function-task-explicit-lifetime] [explicit-function-lifetime]
+"    "   Syntax errors
+"    "       filename.v:39:4: syntax error, rejected "endcase" (syntax-error).
+"    let l:pattern = '\([A-z0-9_\-\/ ]\+\.v\|[A-z0-9_\-\/ ]\+\.sv\):\(\d\+\):\d\+:\(.*\s\+\)\([Style:.*\|(syntax-error.*\)'
+"    let l:output = []
+"    for l:match in ale#util#GetMatches(a:lines, l:pattern)
+"        let l:file = l:match[1]
+"        let l:line = l:match[2]
+"        let l:text = l:match[3]
+"        let l:type = l:match[4]
+"        if l:type =~# '^[Style.*'
+"            call add(l:output, {'lnum': l:line,'text': l:text,'type': 'W'})
+"        elseif l:type =~# '^(syntax-error.*'
+"            call add(l:output, {'lnum': l:line,'text': l:text,'type': 'E'})
+"        else
+"            call add(l:output, {'lnum': l:line,'text': l:text,'type': 'I'})
+"        end
+"    endfor
+"
+"    return l:output
+"endfunction
+"
+"call ale#linter#Define('verilog', {
+"\   'name': 'verible',
+"\   'output_stream': 'stdout',
+"\   'executable': 'verible-verilog-lint',
+"\   'command': function('ale_linters#verilog#verible#GetCommand'),
+"\   'callback': 'ale_linters#verilog#verible#Handle',
+"\   'read_buffer': 0,
+"\})
+
+" Plugins that might be of interest
+
+" Pair autocompletion
+"
+" call plug#begin()
+" Plug 'LunarWatcher/auto-pairs'
+" call plug#end()
+"
+" let g:AutoPairsShortcutToggle = '<C-P>'
+
+" keyword autocompletions
+" Plug 'maxboisvert/vim-simple-complete'
+
+" Git integration
+
+" }}}
+
+
+" MAPPINGS --------------------------------------------------------------- {{{
+
+" Set space key as the leader key
+let mapleader = " "
+
+" Press \p to print the current file to the default printer from a Linux operating system.
+" View available printers:   lpstat -v
+" Set default printer:       lpoptions -d <printer_name>
+" <silent> means do not display output.
+"nnoremap <silent> <leader>p :%w !lp<CR>
+
+
+" INSERT mode mappings
+"
+"    -- go to  beginning and end
+"    ["<C-b>"] = { "<ESC>^i", "Beginning of line" },
+"    ["<C-e>"] = { "<End>", "End of line" },
+"
+"    -- navigate within insert mode
+"    ["<C-h>"] = { "<Left>", "Move left" },
+"    ["<C-l>"] = { "<Right>", "Move right" },
+"    ["<C-j>"] = { "<Down>", "Move down" },
+"    ["<C-k>"] = { "<Up>", "Move up" },
+
+" Type jj to exit insert mode quickly.
+inoremap jj <Esc>
+
+
+" NORMAL mode mappings
+"
+"    ["<Esc>"] = { ":noh <CR>", "Clear highlights" },
+
+"    -- save
+"    ["<C-s>"] = { "<cmd> w <CR>", "Save file" },
+"
+"    -- Copy all
+"    ["<C-c>"] = { "<cmd> %y+ <CR>", "Copy whole file" },
+"
+"    -- line numbers
+"    ["<leader>n"] = { "<cmd> set nu! <CR>", "Toggle line number" },
+"    ["<leader>rn"] = { "<cmd> set rnu! <CR>", "Toggle relative number" },
+"
+"    -- Allow moving the cursor through wrapped lines with j, k, <Up> and <Down>
+"    -- http://www.reddit.com/r/vim/comments/2k4cbr/problem_with_gj_and_gk/
+"    -- empty mode is same as using <cmd> :map
+"    -- also don't use g[j|k] when in operator pending mode, so it doesn't alter d, y or c behaviour
+"    ["j"] = { 'v:count || mode(1)[0:1] == "no" ? "j" : "gj"', "Move down", opts = { expr = true } },
+"    ["k"] = { 'v:count || mode(1)[0:1] == "no" ? "k" : "gk"', "Move up", opts = { expr = true } },
+"    ["<Up>"] = { 'v:count || mode(1)[0:1] == "no" ? "k" : "gk"', "Move up", opts = { expr = true } },
+"    ["<Down>"] = { 'v:count || mode(1)[0:1] == "no" ? "j" : "gj"', "Move down", opts = { expr = true } },
+"
+"    -- new buffer
+"    ["<leader>b"] = { "<cmd> enew <CR>", "New buffer" },
+"    ["<leader>ch"] = { "<cmd> NvCheatsheet <CR>", "Mapping cheatsheet" },
+"
+"    ["<leader>fm"] = {
+"      function()
+"        vim.lsp.buf.format { async = true }
+"      end,
+"      "LSP formatting",
+"    },
+
+" Move across tabs
+" Default keymaps C-PgDn and C-PgUp may conflict with terminal keymaps also
+" used to move across terminal tabs (in Gnome terminal).
+" C-I is equal to C-PgDn, 'gt' too.
+nnoremap <tab> <c-PageDown><CR>
+nnoremap <s-tab> <c-PageUp><CR>
+
+" Close buffer/tab
+nnoremap <leader>x :x<CR>
+
+" Move between windows easily
+" You can split the window in Vim by typing :split or :vsplit.
+" Navigate the split view easier by pressing CTRL+j, CTRL+k, CTRL+h, or CTRL+l
+" or <leader><up|down|left|right>. The former might be faster for moving
+" across several splits, whereas the latter might be easier to type,
+" sometimes.
+noremap <leader><up> :wincmd k<CR>
+noremap <leader><down> :wincmd j<CR>
+noremap <leader><left> :wincmd h<CR>
+noremap <leader><right> :wincmd l<CR>
+" noremap <leader>k :wincmd k<CR>
+" noremap <leader>j :wincmd j<CR>
+" noremap <leader>h :wincmd h<CR>
+" noremap <leader>l :wincmd l<CR>
+nnoremap <c-j> <c-w>j
+nnoremap <c-k> <c-w>k
+nnoremap <c-h> <c-w>h
+nnoremap <c-l> <c-w>l
+
+" Resize split windows using arrow keys by pressing:
+" CTRL+UP, CTRL+DOWN, CTRL+LEFT, or CTRL+RIGHT.
+noremap <c-up> <c-w>+
+noremap <c-down> <c-w>-
+noremap <c-left> <c-w>>
+noremap <c-right> <c-w><
+
+
+
+" fzf related shortcuts
+nnoremap <silent> <C-f> :Files<CR>
+nnoremap <silent> <Leader>f :Rg<CR>
+
+
+" Clear search highlight with c-l
+noremap <silent> <c-l> :nohls<cr><c-l>
+
+" Pressing the letter o will open a new line below the current one.
+" Exit insert mode after creating a new line above or below the current line.
+nnoremap o o<esc>
+nnoremap O O<esc>
+
+" Center the cursor vertically when moving to the next word during a search.
+nnoremap n nzz
+nnoremap N Nzz
+
+" Yank from cursor to the end of line.
+nnoremap Y y$
+
+" Map the F5 key to run a Python script inside Vim.
+" I map F5 to a chain of commands here.
+" :w saves the file.
+" <CR> (carriage return) is like pressing the enter key.
+" !clear runs the external clear screen command.
+" !python3 % executes the current file with Python.
+"nnoremap <f5> :w <CR>:!clear <CR>:!python3 % <CR>
+
+
+" TERMINAL mode mappings
+"
+" ["<C-x>"] = { vim.api.nvim_replace_termcodes("<C-\\><C-N>", true, true, true), "Escape terminal mode" },
+
+
+" VISUAL mode mappings
+"
+
+" Visual mode pressing * or # searches for the current selection
+" Super useful! From an idea by Michael Naumann
+vnoremap <silent> * :call VisualSelection('f')<CR>
+vnoremap <silent> # :call VisualSelection('b')<CR>
+
+
+
+" EXECUTE mode mappings
+"
+"    ["j"] = { 'v:count || mode(1)[0:1] == "no" ? "j" : "gj"', "Move down", opts = { expr = true } },
+"    ["k"] = { 'v:count || mode(1)[0:1] == "no" ? "k" : "gk"', "Move up", opts = { expr = true } },
+"    -- Don't copy the replaced text after pasting in visual mode
+"    -- https://vim.fandom.com/wiki/Replace_a_word_with_yanked_text#Alternative_mapping_for_paste
+"    ["p"] = { 'p:let @+=@0<CR>:let @"=@0<CR>', "Dont copy replaced text", opts = { silent = true } },
+
+
+
+" Bubble single lines
+nnoremap <S-up> :m -2<CR>
+nnoremap <S-down> :m +1<CR>
+
+" Bubble multiple lines
+vnoremap <S-up> :m '<-2<CR>gv=gv
+vnoremap <S-down> :m '>+1<CR>gv=gv
+
+inoremap <S-up> <Esc> :m .-2<CR>==gi
+inoremap <S-down> <Esc> :m .+1<CR>==gi
+
+
+" LSP shortcuts
+"nnoremap <leader>d :
+
+
+" Other mappings
+
+" Open side navigation panel
+" TODO: Find a way to toggle it
+nnoremap <leader>e :Vexplore<CR>
+
+
+" NERDTree Shortcuts
+" TODO: Enable these shortcuts after installing the plugin
+silent! map <F2> :NERDTreeToggle<CR>
+silent! map <F3> :NERDTreeFind<CR>
+"
+"" Have nerdtree ignore certain files and directories.
+let NERDTreeIgnore=['\.git$', '\.jpg$', '\.mp4$', '\.ogg$', '\.iso$', '\.pdf$', '\.pyc$', '\.odt$', '\.png$', '\.gif$', '\.db$']
+
+
+" Switch buffers using F4
+nnoremap <F4> :buffers<CR>:buffer<Space>
+
+" Refresh vim config with F5
+noremap <silent> <F5> :source ~/.vim/vimrc<CR>:filetype detect<CR>:exe ":echo 'vimrc reloaded'"<CR>
+
+
+
+" Switch buffers using ctrl+left or ctrl+right
+"map <C-left> <ESC>:bp<CR>
+"map <C-right> <ESC>:bn<CR>
+
+" Set keyboard shortcut for paste toggle.
+set pastetoggle=<F9>
+
+
+
+" }}}
+
+
+
+" VIMSCRIPT -------------------------------------------------------------- {{{
+
+" }}}
+
+
+" STATUS LINE ------------------------------------------------------------ {{{
+
+"source ~/.vim/statusline.vim
+
+" Target status line should provide this information
+" default = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "cwd", "cursor" },
+
+" Show the status on the second to last line.
+set laststatus=2
+
+" Clear status line when vimrc is reloaded.
+set statusline=
+
+" Returns true if paste mode is enabled
+function! HasPaste()
+    if &paste
+        return 'PASTE MODE  '
+    en
+    return ''
+endfunction
+
+" Status line right side.
+"set statusline+=\ %{mode(1)}\ %{HasPaste()}%t%m%r\ %w\ Bf\ %n
+set statusline+=\ %{mode(1)}\ %{HasPaste()}%t%m%r\ %w
+
+" Add Git information
+"set statusline+=TBD
+
+" Use a divider to separate the left side from the right side.
+set statusline+=%=
+
+"" Add Git information
+"set statusline+=TBD
+"
+"" Use a divider to separate the left side from the right side.
+"set statusline+=%=
+
+" Returns true if paste mode is enabled
+" TODO: Update function to only show the directory vim has been called from
+function! GetCWD()
+    return getcwd()
+endfunction
+
+" Status line right side.
+"set statusline+=\ Ln\ %l,\ Col\ %c\ UTF-8\ \{\}\ %y\ %{GetCWD()}\ Per\ %p%%
+set statusline+=\ Ln\ %l,\ Col\ %c\ %{&fileencoding?&fileencoding:&encoding}\ \{\}\ %y\ %{GetCWD()}\ Per\ %p%%
+
+
+" }}}
+
+
+
+
+
+
+
+" ansible-vim: set indent to 0 after two newlines in insert-mode
+let g:ansible_unindent_after_newline = 1
+
+" ansible-vim settings
+let g:ansible_attribute_highlight = "od"
+let g:ansible_name_highlight = 'b'
+let g:ansible_extra_keywords_highlight = 1
+let g:ansible_normal_keywords_highlight = 'Constant'
+let g:ansible_with_keywords_highlight = 'Constant'
+
+" Fix tmux background color
+if &term =~ '256color'
+    set t_ut=
+endif
+
+" Return to the last edit position when opening files.
+augroup vimrcEx
+    autocmd!
+    autocmd BufReadPost *
+        \ if line("'\"") > 0 && line("'\"") <= line("$") |
+        \   exe "normal g`\"" |
+        \ endif
+augroup END
+
+" Ensure cursor is at the top of the file, if editing a git commit message:
+au FileType gitcommit au! BufEnter COMMIT_EDITMSG call setpos('.', [0, 1, 1, 0])
+
+" Remember info about open buffers on close
+set viminfo^=%
+
+" in case you forgot to sudo
+cnoremap w!! %!sudo tee > /dev/null %
+
+" Highlight trailing whitespace in red
+match ErrorMsg /\s\+\%#\@<!$/
+
+" Syntastic
+let g:syntastic_python_checkers = ['flake8', 'pyflakes']
+" Disable E501(over 79 chars), W191(tabs instead of space), W391(blank line at
+" end of file
+let g:syntastic_python_flake8_args='--ignore=E501'
+
+" Enable checking of perl files.
+let g:syntastic_perl_checkers = ['perl']
+let g:syntastic_enable_perl_checker = 1
+
+let g:syntastic_check_on_open=1
+let g:syntastic_enable_signs=1
+let g:syntastic_enable_highlighting=1
+let g:syntastic_auto_loc_list=1
+let g:syntastic_loc_list_height=5
+
+let g:syntastic_mode_map = { 'mode': 'active',
+        \ 'active_filetypes': ['python', 'javascript', 'css', 'html'],
+        \ 'passive_filetypes': ['make','cpp','c'] }
+
+" Jedi stuff
+let g:jedi#use_tabs_not_buffers = 0
