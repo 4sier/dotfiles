@@ -285,10 +285,6 @@ inoremap jj <Esc>
 "    -- Copy all
 "    ["<C-c>"] = { "<cmd> %y+ <CR>", "Copy whole file" },
 "
-"    -- line numbers
-"    ["<leader>n"] = { "<cmd> set nu! <CR>", "Toggle line number" },
-"    ["<leader>rn"] = { "<cmd> set rnu! <CR>", "Toggle relative number" },
-"
 "    -- Allow moving the cursor through wrapped lines with j, k, <Up> and <Down>
 "    -- http://www.reddit.com/r/vim/comments/2k4cbr/problem_with_gj_and_gk/
 "    -- empty mode is same as using <cmd> :map
@@ -309,6 +305,9 @@ inoremap jj <Esc>
 "      "LSP formatting",
 "    },
 
+" Tabs
+" Create a new tab
+noremap <leader>t :tabnew<CR>
 " Move across tabs
 " Default keymaps C-PgDn and C-PgUp may conflict with terminal keymaps also
 " used to move across terminal tabs (in Gnome terminal).
@@ -316,15 +315,16 @@ inoremap jj <Esc>
 nnoremap <tab> <c-PageDown><CR>
 nnoremap <s-tab> <c-PageUp><CR>
 
-" Close buffer/tab
-nnoremap <leader>x :x<CR>
-
 " Move between windows easily
 " You can split the window in Vim by typing :split or :vsplit.
 " Navigate the split view easier by pressing CTRL+j, CTRL+k, CTRL+h, or CTRL+l
 " or <leader><up|down|left|right>. The former might be faster for moving
 " across several splits, whereas the latter might be easier to type,
 " sometimes.
+" NOTE: The CTRL option allows better VIM-TMUX integration and moving through
+" these tools panes with the same keybind.
+" TODO: Check if plugin vim-tmux-navigator is needed at all with these CTRL
+" keybinds.
 noremap <leader><up> :wincmd k<CR>
 noremap <leader><down> :wincmd j<CR>
 noremap <leader><left> :wincmd h<CR>
@@ -345,7 +345,8 @@ noremap <c-down> <c-w>-
 noremap <c-left> <c-w>>
 noremap <c-right> <c-w><
 
-
+" Close buffer/tab
+nnoremap <leader>x :x<CR>
 
 " fzf related shortcuts
 nnoremap <silent> <C-f> :Files<CR>
@@ -353,6 +354,7 @@ nnoremap <silent> <Leader>f :Rg<CR>
 
 
 " Clear search highlight with c-l
+" FIXME: Not working
 noremap <silent> <c-l> :nohls<cr><c-l>
 
 " Pressing the letter o will open a new line below the current one.
@@ -459,8 +461,6 @@ nnoremap <F4> :buffers<CR>:buffer<Space>
 " Refresh vim config with F5
 noremap <silent> <F5> :source ~/.vim/vimrc<CR>:filetype detect<CR>:exe ":echo 'vimrc reloaded'"<CR>
 
-
-
 " Switch buffers using ctrl+left or ctrl+right
 "map <C-left> <ESC>:bp<CR>
 "map <C-right> <ESC>:bn<CR>
@@ -528,10 +528,6 @@ set statusline+=\ Ln\ %l,\ Col\ %c\ %{&fileencoding?&fileencoding:&encoding}\ \{
 
 
 " }}}
-
-
-
-
 
 
 
