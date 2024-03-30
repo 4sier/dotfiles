@@ -1,15 +1,6 @@
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"
-"               ██╗   ██╗██╗███╗   ███╗██████╗  ██████╗
-"               ██║   ██║██║████╗ ████║██╔══██╗██╔════╝
-"               ██║   ██║██║██╔████╔██║██████╔╝██║
-"               ╚██╗ ██╔╝██║██║╚██╔╝██║██╔══██╗██║
-"                ╚████╔╝ ██║██║ ╚═╝ ██║██║  ██║╚██████╗
-"                 ╚═══╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝
-"
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-
+" TODO
+" 1. Update status line to show git and linting/LSP information
+" 2. Add linting capabilities
 
 " Enable Plugin Manager pathogen
 execute pathogen#infect()
@@ -24,12 +15,18 @@ execute pathogen#infect()
 " Disable annoying beep sound
 set vb
 
+" This might be needed by catpuccin
+" NOTE: This results on vim displaying different colors when running within a
+" tmux session
+set termguicolors
+
 " Set color scheme. Other good ones are bubblegum-256-dark, sorcerer, and zenburn
 "colorscheme bubblegum-256-dark
 "colorscheme darktango
 "colorscheme jellybeans
-colorscheme xoria256
+"colorscheme xoria256
 "colorscheme zenburn
+colorscheme  catppuccin_mocha
 
 " Disable compatibility with vi which can cause unexpected issues.
 set nocompatible
@@ -57,7 +54,6 @@ autocmd InsertLeave * :setlocal relativenumber
 " Highlight cursor line underneath the cursor horizontally.
 set cursorline
 
-" TODO:  What is this for?
 ""hi cursorline gui=none
 augroup CursorlineOnlyInActiveWindow
     autocmd!
@@ -94,8 +90,9 @@ set smartcase
 " Show partial command you type in the last line of the screen.
 set showcmd
 
-" Show the mode you are on the last line.
-set showmode
+" Do not show the mode you are on the last line. The mode will be shown in the
+" status line
+set noshowmode
 
 " Show matching words during a search.
 set showmatch
@@ -105,6 +102,10 @@ set hlsearch
 
 " Set the commands to save in history default number is 20.
 set history=1000
+
+" Search down into subfolders. Provides tab completion for all file-related
+" tasks
+set path+=**
 
 " Enable auto completion menu after pressing TAB.
 set wildmenu
@@ -125,58 +126,92 @@ set smarttab
 " Set utf8 as standard encoding and en_US as the standard language
 set encoding=utf8
 
+" Move cursor to right or below when splitting vertically or horizontally
+set splitright
+set splitbelow
+
 " Use Unix as the standard file type
 set ffs=unix,dos,mac
 
+" Navigate on code files
+" - Use ^] to jump to tag under cursor
+" - Use g^] for ambiguous tags
+" - Use ^t to jump back up the tag stack
+command! MakeTags !ctags -R .
 
 
-" PLUGINS ---------------------------------------------------------------- {{{
+" AUTOCOMPLETE:
 
-" Use this when using vim-lsp
-if executable('verible-verilog-ls')
-    au User lsp_setup call lsp#register_server({
-        \ 'name': 'verible-verilog-ls',
-        \ 'cmd': {server_info->['verible-verilog-ls']},
-        \ 'allowlist': ['verilog', 'systemverilog'],
-        \ })
+" The good stuff is documented in |ins-completion|
 
-endif
+" TODO: Find out how this works againa and what it is for!!
+" HIGHLIGHTS:
+" - ^x^n for JUST this file
+" - ^x^f for filenames (works with our path trick!)
+" - ^x^] for tags only
+" - ^n for anything specified by the 'complete' option
 
-function! s:on_lsp_buffer_enabled() abort
-    setlocal omnifunc=lsp#complete
-    setlocal signcolumn=yes
-    if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
-    nmap <buffer> gd <plug>(lsp-definition)
-    nmap <buffer> gs <plug>(lsp-document-symbol-search)
-    nmap <buffer> gS <plug>(lsp-workspace-symbol-search)
-    nmap <buffer> gr <plug>(lsp-references)
-    nmap <buffer> gi <plug>(lsp-implementation)
-    nmap <buffer> gt <plug>(lsp-type-definition)
-    nmap <buffer> <leader>rn <plug>(lsp-rename)
-    nmap <buffer> [g <plug>(lsp-previous-diagnostic)
-    nmap <buffer> ]g <plug>(lsp-next-diagnostic)
-    nmap <buffer> K <plug>(lsp-hover)
-    nnoremap <buffer> <expr><c-f> lsp#scroll(+4)
-    nnoremap <buffer> <expr><c-d> lsp#scroll(-4)
+" NOW WE CAN:
+" - Use ^n and ^p to go back and forth in the suggestion list
 
-    let g:lsp_format_sync_timeout = 1000
-    autocmd! BufWritePre *.rs,*.go call execute('LspDocumentFormatSync')
 
-    " refer to doc to add more commands
-endfunction
+" Tweaks for browsing
+let g:netrw_banner=0        " disable annoying banner
+let g:netrw_winsize=20      " 20%
+"let g:netrw_browse_split=4  " open in prior window
+let g:netrw_altv=1          " open splits to the right
+let g:netrw_liststyle=3     " tree view
+let g:netrw_list_hide=netrw_gitignore#Hide()
+let g:netrw_list_hide.=',\(^\|\s\s\)\zs\.\S\+'
 
-augroup lsp_install
-    au!
-    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
-    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
-augroup END
+" NOW WE CAN:
+" - :edit a folder to open a file browser
+" - h/v/t to open in an h-split/v-split/tab
+" - check |netrw-browse-maps| for more mappings
 
+
+
+" BUILD INTEGRATION:
+"
+" Steal Mr. Bradley's formatter & add it to our spec_helper
+" http://philipbradley.net/posts/rspec-into-vim-with-quickfix
+"
+" Configure the `make` command to run RSpec
+"set makeprg=bundle\ exec\ rspec\ -f\ QuickfixFormatter
+"
+" NOW WE CAN:
+" - Run :make to run RSpec
+" - :cl to list errors
+" - :cc# to jump to error by number
+" - :cn and :cp to navigate forward and back
+
+" Identify locations for tags files generated with ctags program
+set tags=./tags
+set tags+=~/.vim/tags/UVM/tags
+
+" TODO: What is this for??
+"if getcwd() =~# '^\($your_working_dir/\)'
+"  set secure exrc
+"endif
+
+
+
+" PLUGINS ----------------------------------------------------------------
+
+"
+" ALE
+"
+
+" NOTE: not used for now. Uncomment these lines if used
+"let g:ale_echo_msg_error_str = 'E'
+"let g:ale_echo_msg_warning_str = 'W'
+"let g:ale_echo_msg_format = '[%linter%] [%severity%] %s'
 
 " Use this when using ale
 "let g:ale_linters = {
 "\   'verilog': ['verible']
 "\}
-"
+
 "if !exists('g:ale_verilog_verible_options')
 "    let g:ale_verilog_verible_options = ''
 "endif
@@ -229,28 +264,32 @@ augroup END
 "\   'read_buffer': 0,
 "\})
 
-" Plugins that might be of interest
-
-" Pair autocompletion
-"
-" call plug#begin()
-" Plug 'LunarWatcher/auto-pairs'
-" call plug#end()
-"
-" let g:AutoPairsShortcutToggle = '<C-P>'
-
-" keyword autocompletions
-" Plug 'maxboisvert/vim-simple-complete'
-
-" Git integration
-
-" }}}
 
 
-" MAPPINGS --------------------------------------------------------------- {{{
+" MAPPINGS ---------------------------------------------------------------
 
 " Set space key as the leader key
 let mapleader = " "
+
+" Zoom in/out to pane
+function! WinZoomToggle() abort
+    if ! exists('w:WinZoomIsZoomed')
+        let w:WinZoomIsZoomed = 0
+    endif
+    if w:WinZoomIsZoomed == 0
+        let w:WinZoomOldWidth = winwidth(0)
+        let w:WinZoomOldHeight = winheight(0)
+        wincmd _
+        wincmd |
+        let w:WinZoomIsZoomed = 1
+    elseif w:WinZoomIsZoomed == 1
+        execute "resize " . w:WinZoomOldHeight
+        execute "vertical resize " . w:WinZoomOldWidth
+        let w:WinZoomIsZoomed = 0
+    endif
+endfunction
+
+nnoremap <leader>wz :call WinZoomToggle()<CR>
 
 " Press \p to print the current file to the default printer from a Linux operating system.
 " View available printers:   lpstat -v
@@ -273,7 +312,6 @@ let mapleader = " "
 
 " Type jj to exit insert mode quickly.
 inoremap jj <Esc>
-
 
 " NORMAL mode mappings
 "
@@ -316,27 +354,18 @@ nnoremap <tab> <c-PageDown><CR>
 nnoremap <s-tab> <c-PageUp><CR>
 
 " Move between windows easily
-" You can split the window in Vim by typing :split or :vsplit.
-" Navigate the split view easier by pressing CTRL+j, CTRL+k, CTRL+h, or CTRL+l
-" or <leader><up|down|left|right>. The former might be faster for moving
-" across several splits, whereas the latter might be easier to type,
-" sometimes.
-" NOTE: The CTRL option allows better VIM-TMUX integration and moving through
-" these tools panes with the same keybind.
-" TODO: Check if plugin vim-tmux-navigator is needed at all with these CTRL
-" keybinds.
-noremap <leader><up> :wincmd k<CR>
-noremap <leader><down> :wincmd j<CR>
-noremap <leader><left> :wincmd h<CR>
-noremap <leader><right> :wincmd l<CR>
-" noremap <leader>k :wincmd k<CR>
-" noremap <leader>j :wincmd j<CR>
-" noremap <leader>h :wincmd h<CR>
-" noremap <leader>l :wincmd l<CR>
+" NITE: Plugin vim-tmux-navigator is installed, which allows moving from vim
+" to tmux panes and back with the same keybinds.
 nnoremap <c-j> <c-w>j
 nnoremap <c-k> <c-w>k
 nnoremap <c-h> <c-w>h
 nnoremap <c-l> <c-w>l
+" These are alternative keybainds to more across Vim-only panes. Enable them
+" back if needed.
+"noremap <leader><up> :wincmd k<CR>
+"noremap <leader><down> :wincmd j<CR>
+"noremap <leader><left> :wincmd h<CR>
+"noremap <leader><right> :wincmd l<CR>
 
 " Resize split windows using arrow keys by pressing:
 " CTRL+UP, CTRL+DOWN, CTRL+LEFT, or CTRL+RIGHT.
@@ -349,13 +378,20 @@ noremap <c-right> <c-w><
 nnoremap <leader>x :x<CR>
 
 " fzf related shortcuts
+" This needs the fzf plugin and binary. Unlikely to have access to the binary
+" on a strict environment, so disabled for now
+" FIXME: <C-f> currently clashes with the tmux leader key, which is the same.
+" In order for this to work, either change the tmux leader key or press <C-f>
+" twice when in tmux. This is not ideal, as it brings a different behavior
+" when running vim inside or outside tmux
 nnoremap <silent> <C-f> :Files<CR>
 nnoremap <silent> <Leader>f :Rg<CR>
 
-
 " Clear search highlight with c-l
-" FIXME: Not working
-noremap <silent> <c-l> :nohls<cr><c-l>
+" FIXME: This keybind is used above for moving across panes. Find an
+" alternative key. Ideally escape, but it was causing issues when opening
+" filess :/
+"noremap <silent> <c-l> :nohls<cr><c-l>
 
 " Pressing the letter o will open a new line below the current one.
 " Exit insert mode after creating a new line above or below the current line.
@@ -391,8 +427,6 @@ nnoremap Y y$
 vnoremap <silent> * :call VisualSelection('f')<CR>
 vnoremap <silent> # :call VisualSelection('b')<CR>
 
-
-
 " EXECUTE mode mappings
 "
 "    ["j"] = { 'v:count || mode(1)[0:1] == "no" ? "j" : "gj"', "Move down", opts = { expr = true } },
@@ -400,8 +434,6 @@ vnoremap <silent> # :call VisualSelection('b')<CR>
 "    -- Don't copy the replaced text after pasting in visual mode
 "    -- https://vim.fandom.com/wiki/Replace_a_word_with_yanked_text#Alternative_mapping_for_paste
 "    ["p"] = { 'p:let @+=@0<CR>:let @"=@0<CR>', "Dont copy replaced text", opts = { silent = true } },
-
-
 
 " Bubble single lines
 nnoremap <S-up> :m -2<CR>
@@ -414,35 +446,14 @@ vnoremap <S-down> :m '>+1<CR>gv=gv
 inoremap <S-up> <Esc> :m .-2<CR>==gi
 inoremap <S-down> <Esc> :m .+1<CR>==gi
 
-
 " LSP shortcuts
 "nnoremap <leader>d :
-
-
-function! WinZoomToggle() abort
-    if ! exists('w:WinZoomIsZoomed')
-        let w:WinZoomIsZoomed = 0
-    endif
-    if w:WinZoomIsZoomed == 0
-        let w:WinZoomOldWidth = winwidth(0)
-        let w:WinZoomOldHeight = winheight(0)
-        wincmd _
-        wincmd |
-        let w:WinZoomIsZoomed = 1
-    elseif w:WinZoomIsZoomed == 1
-        execute "resize " . w:WinZoomOldHeight
-        execute "vertical resize " . w:WinZoomOldWidth
-        let w:WinZoomIsZoomed = 0
-    endif
-endfunction
-
-nnoremap <leader>wz :call WinZoomToggle()<CR>
-
 
 " Other mappings
 
 " Open side navigation panel
 " TODO: Find a way to toggle it
+"       It can be closed with <leader>x, so no need to toggle ;)
 nnoremap <leader>e :Vexplore<CR>
 
 
@@ -450,7 +461,7 @@ nnoremap <leader>e :Vexplore<CR>
 " TODO: Enable these shortcuts after installing the plugin
 silent! map <F2> :NERDTreeToggle<CR>
 silent! map <F3> :NERDTreeFind<CR>
-"
+
 "" Have nerdtree ignore certain files and directories.
 let NERDTreeIgnore=['\.git$', '\.jpg$', '\.mp4$', '\.ogg$', '\.iso$', '\.pdf$', '\.pyc$', '\.odt$', '\.png$', '\.gif$', '\.db$']
 
@@ -470,18 +481,8 @@ set pastetoggle=<F9>
 
 
 
-" }}}
 
-
-
-" VIMSCRIPT -------------------------------------------------------------- {{{
-
-" }}}
-
-
-" STATUS LINE ------------------------------------------------------------ {{{
-
-"source ~/.vim/statusline.vim
+" STATUSLINE ----------------------------------------------------------------
 
 " Target status line should provide this information
 " default = { "mode", "file", "git", "%=", "lsp_msg", "%=", "diagnostics", "lsp", "cwd", "cursor" },
@@ -489,45 +490,84 @@ set pastetoggle=<F9>
 " Show the status on the second to last line.
 set laststatus=2
 
-" Clear status line when vimrc is reloaded.
-set statusline=
 
-" Returns true if paste mode is enabled
-function! HasPaste()
-    if &paste
-        return 'PASTE MODE  '
-    en
-    return ''
-endfunction
-
-" Status line right side.
-"set statusline+=\ %{mode(1)}\ %{HasPaste()}%t%m%r\ %w\ Bf\ %n
-set statusline+=\ %{mode(1)}\ %{HasPaste()}%t%m%r\ %w
-
-" Add Git information
-"set statusline+=TBD
-
-" Use a divider to separate the left side from the right side.
-set statusline+=%=
-
-"" Add Git information
-"set statusline+=TBD
+" Set status line - Place this at the bottom of this file
+" NOTE: this is automatically done by plugin lightline.vim, which is also
+" automatically loaded by Pathogen
 "
-"" Use a divider to separate the left side from the right side.
-"set statusline+=%=
+" NOTE: plugin vim-mistify-statusline provides with Git, linter status, etc
+" that could be interesting to have as part of the statusline. I do like
+" better the colorscheme of lightline.vim, so find a way to merge them two
+" into 1, new, plugin. Customise colors a bit too, e.g., make the rightmost
+" section more readable.
+"
+" TODO: Port Catppuccin colorscheme to be used here?
+"
+let g:lightline = {
+      \ 'colorscheme': 'PaperColor_dark',
+      \ }
 
-" Returns true if paste mode is enabled
-" TODO: Update function to only show the directory vim has been called from
-function! GetCWD()
-    return getcwd()
-endfunction
+" Use these options below once lightline.vim and vim-mistfly-statusline
+" plugins are merged, if ALE is also enabled.
 
-" Status line right side.
-"set statusline+=\ Ln\ %l,\ Col\ %c\ UTF-8\ \{\}\ %y\ %{GetCWD()}\ Per\ %p%%
-set statusline+=\ Ln\ %l,\ Col\ %c\ %{&fileencoding?&fileencoding:&encoding}\ \{\}\ %y\ %{GetCWD()}\ Per\ %p%%
+"Plug 'bluz71/vim-mistfly-statusline'
+
+" Use this when using vim-lsp
+"if executable('verible-verilog-ls')
+"    au User lsp_setup call lsp#register_server({
+"        \ 'name': 'verible-verilog-ls',
+"        \ 'cmd': {server_info->['verible-verilog-ls']},
+"        \ 'allowlist': ['verilog', 'systemverilog'],
+"        \ })
+"
+"endif
+"
+"function! s:on_lsp_buffer_enabled() abort
+"    setlocal omnifunc=lsp#complete
+"    setlocal signcolumn=yes
+"    if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+"    nmap <buffer> gd <plug>(lsp-definition)
+"    nmap <buffer> gs <plug>(lsp-document-symbol-search)
+"    nmap <buffer> gS <plug>(lsp-workspace-symbol-search)
+"    nmap <buffer> gr <plug>(lsp-references)
+"    nmap <buffer> gi <plug>(lsp-implementation)
+"    nmap <buffer> gt <plug>(lsp-type-definition)
+"    nmap <buffer> <leader>rn <plug>(lsp-rename)
+"    nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+"    nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+"    nmap <buffer> K <plug>(lsp-hover)
+"    nnoremap <buffer> <expr><c-f> lsp#scroll(+4)
+"    nnoremap <buffer> <expr><c-d> lsp#scroll(-4)
+"
+"    let g:lsp_format_sync_timeout = 1000
+"    autocmd! BufWritePre *.rs,*.go call execute('LspDocumentFormatSync')
+"
+"    " refer to doc to add more commands
+"endfunction
+"
+"augroup lsp_install
+"    au!
+"    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+"    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+"augroup END
+
+" Plugins that might be of interest
+
+" Pair autocompletion
+"
+" call plug#begin()
+" Plug 'LunarWatcher/auto-pairs'
+" call plug#end()
+"
+" let g:AutoPairsShortcutToggle = '<C-P>'
+
+" keyword autocompletions
+" Plug 'maxboisvert/vim-simple-complete'
+
+" Git integration
 
 
-" }}}
+
 
 
 
@@ -589,3 +629,4 @@ let g:syntastic_mode_map = { 'mode': 'active',
 
 " Jedi stuff
 let g:jedi#use_tabs_not_buffers = 0
+
