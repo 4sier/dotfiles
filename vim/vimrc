@@ -1,6 +1,8 @@
 " TODO
 " 1. Update status line to show git and linting/LSP information
-" 2. Add linting capabilities
+" 2. Add linting capabilities. Options are:
+"    - verilator (it must report width mismatch warnings)
+"    - veridian and verible -> this is working in nvim
 
 " Enable Plugin Manager pathogen
 execute pathogen#infect()
@@ -265,6 +267,22 @@ set tags+=~/.vim/tags/UVM/tags
 "\})
 
 
+"
+" vim-lsp
+"
+"if executable('verible-verilog-ls')
+"    au User lsp_setup call lsp#register_server({
+"        \ 'name': 'verible-verilog-ls',
+"        \ 'cmd': {server_info->['verible-verilog-ls']},
+"        \ 'allowlist': ['verilog', 'systemverilog'],
+"        \ })
+"endif
+
+"
+" verilog-sistemverilog
+"
+"VerilogErrorFormat verilator 1
+
 
 " MAPPINGS ---------------------------------------------------------------
 
@@ -479,7 +497,11 @@ noremap <silent> <F5> :source ~/.vim/vimrc<CR>:filetype detect<CR>:exe ":echo 'v
 " Set keyboard shortcut for paste toggle.
 set pastetoggle=<F9>
 
-
+" Open a terminal pane below the current pane. The aim is to use Alt+h keybind
+" but some terminals will instead send to vim keybind <Esc>h. Use whichever
+" mapping works.
+"nnoremap <A-h> :term<CR>
+nnoremap <Esc>h :term<CR>
 
 
 " STATUSLINE ----------------------------------------------------------------
@@ -606,26 +628,6 @@ cnoremap w!! %!sudo tee > /dev/null %
 
 " Highlight trailing whitespace in red
 match ErrorMsg /\s\+\%#\@<!$/
-
-" Syntastic
-let g:syntastic_python_checkers = ['flake8', 'pyflakes']
-" Disable E501(over 79 chars), W191(tabs instead of space), W391(blank line at
-" end of file
-let g:syntastic_python_flake8_args='--ignore=E501'
-
-" Enable checking of perl files.
-let g:syntastic_perl_checkers = ['perl']
-let g:syntastic_enable_perl_checker = 1
-
-let g:syntastic_check_on_open=1
-let g:syntastic_enable_signs=1
-let g:syntastic_enable_highlighting=1
-let g:syntastic_auto_loc_list=1
-let g:syntastic_loc_list_height=5
-
-let g:syntastic_mode_map = { 'mode': 'active',
-        \ 'active_filetypes': ['python', 'javascript', 'css', 'html'],
-        \ 'passive_filetypes': ['make','cpp','c'] }
 
 " Jedi stuff
 let g:jedi#use_tabs_not_buffers = 0
