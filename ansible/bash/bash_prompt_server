@@ -1,2 +1,0 @@
-# PS1 Prompt
-tty -s && export PS1='\[\033[03;37m\]\[$(tput rev)\]\[$(tput setaf 3)\]\u@\h\[$(tput sgr 0)\]:\[$(tput setaf 7)\]\w\[$(tput sgr 0)\]$ '
