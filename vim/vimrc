@@ -402,6 +402,8 @@ nnoremap <leader>x :x<CR>
 " In order for this to work, either change the tmux leader key or press <C-f>
 " twice when in tmux. This is not ideal, as it brings a different behavior
 " when running vim inside or outside tmux
+" NOTE: Consider using <Leader>ff and <Leader>fb to search files and in
+" buffers
 nnoremap <silent> <C-f> :Files<CR>
 nnoremap <silent> <Leader>f :Rg<CR>
 
@@ -522,8 +524,6 @@ set laststatus=2
 " better the colorscheme of lightline.vim, so find a way to merge them two
 " into 1, new, plugin. Customise colors a bit too, e.g., make the rightmost
 " section more readable.
-"
-" TODO: Port Catppuccin colorscheme to be used here?
 "
 let g:lightline = {
       \ 'colorscheme': 'PaperColor_dark',
