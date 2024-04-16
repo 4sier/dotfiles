@@ -74,7 +74,7 @@ set nowb
 set noswapfile
 
 " Do not let cursor scroll below or above N number of lines when scrolling.
-set scrolloff=10
+set scrolloff=8
 
 " Do not wrap lines. Allow long lines to extend as far as the line goes.
 set nowrap
@@ -132,6 +132,16 @@ set encoding=utf8
 set splitright
 set splitbelow
 
+" Let's save undo info!
+"if !isdirectory($HOME."/.vim")
+"    call mkdir($HOME."/.vim", "", 0770)
+"endif
+if !isdirectory($HOME."/.vim/undo-dir")
+    call mkdir($HOME."/.vim/undo-dir", "", 0700)
+endif
+set undodir=~/.vim/undo-dir
+set undofile
+
 " Use Unix as the standard file type
 set ffs=unix,dos,mac
 
@@ -141,12 +151,13 @@ set ffs=unix,dos,mac
 " - Use ^t to jump back up the tag stack
 command! MakeTags !ctags -R .
 
+set mouse=a
 
 " AUTOCOMPLETE:
 
 " The good stuff is documented in |ins-completion|
 
-" TODO: Find out how this works againa and what it is for!!
+" TODO: Find out how this works again and what it is for!!
 " HIGHLIGHTS:
 " - ^x^n for JUST this file
 " - ^x^f for filenames (works with our path trick!)
@@ -170,8 +181,6 @@ let g:netrw_list_hide.=',\(^\|\s\s\)\zs\.\S\+'
 " - :edit a folder to open a file browser
 " - h/v/t to open in an h-split/v-split/tab
 " - check |netrw-browse-maps| for more mappings
-
-
 
 " BUILD INTEGRATION:
 "
@@ -289,6 +298,10 @@ set tags+=~/.vim/tags/UVM/tags
 " Set space key as the leader key
 let mapleader = " "
 
+" Use if whichkey is installed
+nnoremap <silent> <leader> :WhichKey '<Space>'<CR>
+vnoremap <silent> <leader> :WhichKeyVisual '<Space>'<CR>
+
 " Zoom in/out to pane
 function! WinZoomToggle() abort
     if ! exists('w:WinZoomIsZoomed')
@@ -307,63 +320,19 @@ function! WinZoomToggle() abort
     endif
 endfunction
 
-nnoremap <leader>wz :call WinZoomToggle()<CR>
-
-" Press \p to print the current file to the default printer from a Linux operating system.
-" View available printers:   lpstat -v
-" Set default printer:       lpoptions -d <printer_name>
-" <silent> means do not display output.
-"nnoremap <silent> <leader>p :%w !lp<CR>
-
-
-" INSERT mode mappings
-"
-"    -- go to  beginning and end
-"    ["<C-b>"] = { "<ESC>^i", "Beginning of line" },
-"    ["<C-e>"] = { "<End>", "End of line" },
-"
-"    -- navigate within insert mode
-"    ["<C-h>"] = { "<Left>", "Move left" },
-"    ["<C-l>"] = { "<Right>", "Move right" },
-"    ["<C-j>"] = { "<Down>", "Move down" },
-"    ["<C-k>"] = { "<Up>", "Move up" },
-
-" Type jj to exit insert mode quickly.
-inoremap jj <Esc>
 
 " NORMAL mode mappings
 "
-"    ["<Esc>"] = { ":noh <CR>", "Clear highlights" },
+" Open a terminal pane below the current pane. The aim is to use Alt+h keybind
+" but some terminals will instead send to vim keybind <Esc>h. Use whichever
+" mapping works.
+"nnoremap <A-h> :term<CR>
+nnoremap <Esc>h :term<CR>
 
-"    -- save
-"    ["<C-s>"] = { "<cmd> w <CR>", "Save file" },
-"
-"    -- Copy all
-"    ["<C-c>"] = { "<cmd> %y+ <CR>", "Copy whole file" },
-"
-"    -- Allow moving the cursor through wrapped lines with j, k, <Up> and <Down>
-"    -- http://www.reddit.com/r/vim/comments/2k4cbr/problem_with_gj_and_gk/
-"    -- empty mode is same as using <cmd> :map
-"    -- also don't use g[j|k] when in operator pending mode, so it doesn't alter d, y or c behaviour
-"    ["j"] = { 'v:count || mode(1)[0:1] == "no" ? "j" : "gj"', "Move down", opts = { expr = true } },
-"    ["k"] = { 'v:count || mode(1)[0:1] == "no" ? "k" : "gk"', "Move up", opts = { expr = true } },
-"    ["<Up>"] = { 'v:count || mode(1)[0:1] == "no" ? "k" : "gk"', "Move up", opts = { expr = true } },
-"    ["<Down>"] = { 'v:count || mode(1)[0:1] == "no" ? "j" : "gj"', "Move down", opts = { expr = true } },
-"
-"    -- new buffer
-"    ["<leader>b"] = { "<cmd> enew <CR>", "New buffer" },
-"    ["<leader>ch"] = { "<cmd> NvCheatsheet <CR>", "Mapping cheatsheet" },
-"
-"    ["<leader>fm"] = {
-"      function()
-"        vim.lsp.buf.format { async = true }
-"      end,
-"      "LSP formatting",
-"    },
+" Clear highlights
+nnoremap <Esc> :noh <CR>"
 
 " Tabs
-" Create a new tab
-noremap <leader>t :tabnew<CR>
 " Move across tabs
 " Default keymaps C-PgDn and C-PgUp may conflict with terminal keymaps also
 " used to move across terminal tabs (in Gnome terminal).
@@ -372,18 +341,12 @@ nnoremap <tab> <c-PageDown><CR>
 nnoremap <s-tab> <c-PageUp><CR>
 
 " Move between windows easily
-" NITE: Plugin vim-tmux-navigator is installed, which allows moving from vim
+" NOTE: Plugin vim-tmux-navigator is installed, which allows moving from vim
 " to tmux panes and back with the same keybinds.
 nnoremap <c-j> <c-w>j
 nnoremap <c-k> <c-w>k
 nnoremap <c-h> <c-w>h
 nnoremap <c-l> <c-w>l
-" These are alternative keybainds to more across Vim-only panes. Enable them
-" back if needed.
-"noremap <leader><up> :wincmd k<CR>
-"noremap <leader><down> :wincmd j<CR>
-"noremap <leader><left> :wincmd h<CR>
-"noremap <leader><right> :wincmd l<CR>
 
 " Resize split windows using arrow keys by pressing:
 " CTRL+UP, CTRL+DOWN, CTRL+LEFT, or CTRL+RIGHT.
@@ -392,26 +355,13 @@ noremap <c-down> <c-w>-
 noremap <c-left> <c-w>>
 noremap <c-right> <c-w><
 
-" Close buffer/tab
-nnoremap <leader>x :x<CR>
+" Navigate buffers
+nnoremap <S-l> :bnext<CR>
+nnoremap <S-h> :bprevious<CR>
 
-" fzf related shortcuts
-" This needs the fzf plugin and binary. Unlikely to have access to the binary
-" on a strict environment, so disabled for now
-" FIXME: <C-f> currently clashes with the tmux leader key, which is the same.
-" In order for this to work, either change the tmux leader key or press <C-f>
-" twice when in tmux. This is not ideal, as it brings a different behavior
-" when running vim inside or outside tmux
-" NOTE: Consider using <Leader>ff and <Leader>fb to search files and in
-" buffers
-nnoremap <silent> <C-f> :Files<CR>
-nnoremap <silent> <Leader>f :Rg<CR>
-
-" Clear search highlight with c-l
-" FIXME: This keybind is used above for moving across panes. Find an
-" alternative key. Ideally escape, but it was causing issues when opening
-" filess :/
-"noremap <silent> <c-l> :nohls<cr><c-l>
+" Bubble single lines
+nnoremap <S-up> :m -2<CR>
+nnoremap <S-down> :m +1<CR>
 
 " Pressing the letter o will open a new line below the current one.
 " Exit insert mode after creating a new line above or below the current line.
@@ -425,13 +375,51 @@ nnoremap N Nzz
 " Yank from cursor to the end of line.
 nnoremap Y y$
 
-" Map the F5 key to run a Python script inside Vim.
-" I map F5 to a chain of commands here.
-" :w saves the file.
-" <CR> (carriage return) is like pressing the enter key.
-" !clear runs the external clear screen command.
-" !python3 % executes the current file with Python.
-"nnoremap <f5> :w <CR>:!clear <CR>:!python3 % <CR>
+" Switch buffers using F4
+nnoremap <F4> :buffers<CR>:buffer<Space>
+
+" Refresh vim config with F5
+noremap <silent> <F5> :source ~/.vim/vimrc<CR>:filetype detect<CR>:exe ":echo 'vimrc reloaded'"<CR>
+
+
+" INSERT mode mappings
+"
+" navigate within insert mode
+inoremap <c-j> <Down>
+inoremap <c-k> <Up>
+inoremap <c-h> <Left>
+inoremap <c-l> <Right>
+
+" Type jj to exit insert mode quickly.
+inoremap jj <Esc>
+
+inoremap <S-up> <Esc> :m .-2<CR>==gi
+inoremap <S-down> <Esc> :m .+1<CR>==gi
+
+
+" VISUAL mode mappings
+"
+" Stay in indent mode
+vnoremap < <gv^
+vnoremap > >gv^
+
+" Visual mode pressing * or # searches for the current selection
+" Super useful! From an idea by Michael Naumann
+vnoremap <silent> * :call VisualSelection('f')<CR>
+vnoremap <silent> # :call VisualSelection('b')<CR>
+
+" Bubble multiple lines
+vnoremap <S-up> :m '<-2<CR>gv=gv
+vnoremap <S-down> :m '>+1<CR>gv=gv
+
+" Don't copy the replaced text after pasting in visual mode
+vnoremap p "_dP
+
+
+" EXECUTE mode mappings
+"
+
+" Other mappings
 
 
 " TERMINAL mode mappings
@@ -439,71 +427,125 @@ nnoremap Y y$
 " ["<C-x>"] = { vim.api.nvim_replace_termcodes("<C-\\><C-N>", true, true, true), "Escape terminal mode" },
 
 
-" VISUAL mode mappings
-"
-
-" Visual mode pressing * or # searches for the current selection
-" Super useful! From an idea by Michael Naumann
-vnoremap <silent> * :call VisualSelection('f')<CR>
-vnoremap <silent> # :call VisualSelection('b')<CR>
-
-" EXECUTE mode mappings
-"
-"    ["j"] = { 'v:count || mode(1)[0:1] == "no" ? "j" : "gj"', "Move down", opts = { expr = true } },
-"    ["k"] = { 'v:count || mode(1)[0:1] == "no" ? "k" : "gk"', "Move up", opts = { expr = true } },
-"    -- Don't copy the replaced text after pasting in visual mode
-"    -- https://vim.fandom.com/wiki/Replace_a_word_with_yanked_text#Alternative_mapping_for_paste
-"    ["p"] = { 'p:let @+=@0<CR>:let @"=@0<CR>', "Dont copy replaced text", opts = { silent = true } },
-
-" Bubble single lines
-nnoremap <S-up> :m -2<CR>
-nnoremap <S-down> :m +1<CR>
-
-" Bubble multiple lines
-vnoremap <S-up> :m '<-2<CR>gv=gv
-vnoremap <S-down> :m '>+1<CR>gv=gv
-
-inoremap <S-up> <Esc> :m .-2<CR>==gi
-inoremap <S-down> <Esc> :m .+1<CR>==gi
-
-" LSP shortcuts
-"nnoremap <leader>d :
-
-" Other mappings
-
-" Open side navigation panel
-" TODO: Find a way to toggle it
-"       It can be closed with <leader>x, so no need to toggle ;)
-nnoremap <leader>e :Vexplore<CR>
-
-
 " NERDTree Shortcuts
 " TODO: Enable these shortcuts after installing the plugin
-silent! map <F2> :NERDTreeToggle<CR>
-silent! map <F3> :NERDTreeFind<CR>
+"silent! map <F2> :NERDTreeToggle<CR>
+"silent! map <F3> :NERDTreeFind<CR>
 
 "" Have nerdtree ignore certain files and directories.
-let NERDTreeIgnore=['\.git$', '\.jpg$', '\.mp4$', '\.ogg$', '\.iso$', '\.pdf$', '\.pyc$', '\.odt$', '\.png$', '\.gif$', '\.db$']
+"let NERDTreeIgnore=['\.git$', '\.jpg$', '\.mp4$', '\.ogg$', '\.iso$', '\.pdf$', '\.pyc$', '\.odt$', '\.png$', '\.gif$', '\.db$']
 
-
-" Switch buffers using F4
-nnoremap <F4> :buffers<CR>:buffer<Space>
-
-" Refresh vim config with F5
-noremap <silent> <F5> :source ~/.vim/vimrc<CR>:filetype detect<CR>:exe ":echo 'vimrc reloaded'"<CR>
-
-" Switch buffers using ctrl+left or ctrl+right
-"map <C-left> <ESC>:bp<CR>
-"map <C-right> <ESC>:bn<CR>
 
 " Set keyboard shortcut for paste toggle.
 set pastetoggle=<F9>
 
-" Open a terminal pane below the current pane. The aim is to use Alt+h keybind
-" but some terminals will instead send to vim keybind <Esc>h. Use whichever
-" mapping works.
-"nnoremap <A-h> :term<CR>
-nnoremap <Esc>h :term<CR>
+
+let g:which_key_map = {}
+let g:which_key_map = {
+      \ 'e' : [ 'Vexplore'  , 'Open side navigation panel'],
+      \ 'q' : [ 'q!'        , 'Force quit' ]               ,
+      \ 't' : [ 'tabnew'    , 'New tab' ]                  ,
+      \ 'x' : [ 'x'         , 'Close buffer/tab' ]         ,
+      \ }
+
+let g:which_key_map.b = {
+      \ 'name' : '[B]uffer' ,
+      \ '1' : ['b1'        , '[B]uffer 1']          ,
+      \ '2' : ['b2'        , '[B]uffer 2']          ,
+      \ 'd' : ['bd'        , '[B]uffer [D]elete']   ,
+      \ 'f' : ['bfirst'    , '[B]uffer [F]irst']    ,
+      \ 'l' : ['blast'     , '[B]uffer [L]ast']     ,
+      \ 'n' : ['bnext'     , '[B]uffer [N]ext']     ,
+      \ 'p' : ['bprevious' , '[B]uffer [P]revious'] ,
+      \ '?' : ['Buffers'   , '[B]uffer fzf-buffer'] ,
+      \ }
+
+":copen " Open the quickfix window
+":ccl   " Close it
+":cw    " Open it if there are "errors", close it otherwise (some people prefer this)
+":cn    " Go to the next error in the window
+":cp    " Go to the previous error in the window
+":cnf   " Go to the first error in the next file
+":.cc   " Go to error under cursor (if cursor is in quickfix window)
+let g:which_key_map.c = {
+      \ 'name' : '[C]ode' ,
+      \ }
+
+let g:which_key_map.d = {
+      \ 'name' : '[D]ocument' ,
+      \ }
+
+let g:which_key_map.r = {
+      \ 'name' : '[R]ename' ,
+      \ }
+
+
+":GFiles [OPTS] 	Git files (git ls-files)
+":GFiles? 	Git files (git status)
+":Colors 	Color schemes
+":Ag [PATTERN] 	ag search result (ALT-A to select all, ALT-D to deselect all)
+":Rg [PATTERN] 	rg search result (ALT-A to select all, ALT-D to deselect all)
+":RG [PATTERN] 	rg search result; relaunch ripgrep on every keystroke
+":Lines [QUERY] 	Lines in loaded buffers
+":BLines [QUERY] 	Lines in the current buffer
+":Tags [QUERY] 	Tags in the project (ctags -R)
+":BTags [QUERY] 	Tags in the current buffer
+":Changes 	Changelist across all open buffers
+":Marks 	Marks
+":Jumps 	Jumps
+":Locate PATTERN 	locate command output
+":History 	v:oldfiles and open buffers
+":History: 	Command history
+":History/ 	Search history
+":Snippets 	Snippets (UltiSnips)
+":Commits [LOG_OPTS] 	Git commits (requires fugitive.vim)
+":BCommits [LOG_OPTS] 	Git commits for the current buffer; visual-select lines to track changes in the range
+":Maps 	Normal mode mappings
+":Helptags 	Help tags 1
+":Filetypes 	File types
+"vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
+"      vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
+"      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
+"      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
+"      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
+"      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
+"      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+"      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+let g:which_key_map['s'] = {
+      \ 'name' : '[S]earch' ,
+      \ 'b' : ['Buffers'   , '[S]earch [B]uffers']  ,
+      \ 'c' : ['Commands'  , '[S]earch [C]ommands'] ,
+      \ 'f' : ['Files'     , '[S]earch [F]iles']    ,
+      \ 'g' : ['Rg'        , '[S]earch by [G]rep']  ,
+      \ 'w' : ['Windows'   , '[S]earch [W]indows']  ,
+      \ }
+"      \ 'd' : ['Diagnostics'  , '[S]earch [D]iagnostics'] ,
+
+"['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
+let g:which_key_map['w'] = {
+      \ 'name' : '[W]indows' ,
+      \ '+' : [ ':resize +5<CR>'           , 'Increase window height' ]      ,
+      \ '-' : [ ':resize -5<CR>'           , 'Decrease window height' ]      ,
+      \ '<' : [ '<C-W>5<'                  , 'expand-window-left' ]          ,
+      \ '>' : [ '<C-W>5>'                  , 'expand-window-right' ]         ,
+      \ '=' : [ '<C-W>='                   , 'Equal height and width' ]      ,
+      \ '_' : [ '<C-W>_'                   , 'Max out height' ]              ,
+      \ '|' : [ '<C-W>|'                   , 'Max out width' ]               ,
+      \ 'h' : [ '<C-W>h'                   , 'Go to window on the left' ]    ,
+      \ 'j' : [ '<C-W>j'                   , 'Go to window below' ]          ,
+      \ 'k' : [ '<C-W>k'                   , 'Go to window up' ]             ,
+      \ 'l' : [ '<C-W>l'                   , 'Go to window on the right' ]   ,
+      \ 'o' : [ '<C-W>o'                   , 'Close all other windows' ]     ,
+      \ 'q' : [ '<C-W>q'                   , 'Quit this window' ]            ,
+      \ 's' : [ '<C-W>s'                   , 'Split window below' ]          ,
+      \ 'T' : [ '<C-W>T'                   , 'Break out into a new tab' ]    ,
+      \ 'v' : [ '<C-W>v'                   , 'Split window right' ]          ,
+      \ 'w' : [ '<C-W>w'                   , 'Switch windows' ]              ,
+      \ 'x' : [ '<C-W>x'                   , 'Swap current with next' ]      ,
+      \ 'z' : [ ':call WinZoomToggle()<CR>', 'Toggle zoom in/out on window' ],
+      \ '?' : [ 'Windows'                  , 'fzf-window' ]                  ,
+      \ }
+call which_key#register('<Space>', "g:which_key_map")
 
 
 " STATUSLINE ----------------------------------------------------------------
@@ -513,7 +555,6 @@ nnoremap <Esc>h :term<CR>
 
 " Show the status on the second to last line.
 set laststatus=2
-
 
 " Set status line - Place this at the bottom of this file
 " NOTE: this is automatically done by plugin lightline.vim, which is also
@@ -525,8 +566,18 @@ set laststatus=2
 " into 1, new, plugin. Customise colors a bit too, e.g., make the rightmost
 " section more readable.
 "
+" TODO: Port Catppuccin colorscheme to be used here?
+"
 let g:lightline = {
       \ 'colorscheme': 'PaperColor_dark',
+      \ 'active': {
+		  \ 'left': [ [ 'mode', 'paste' ],
+		  \           [ 'readonly', 'absolutepath', 'modified' ],
+		  \           [ 'gitbranch' ] ],
+          \ },
+          \ 'component_function': {
+          \   'gitbranch': 'FugitiveHead'
+          \ },
       \ }
 
 " Use these options below once lightline.vim and vim-mistfly-statusline
